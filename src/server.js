@@ -19,44 +19,54 @@ app.get("/users", async function (req, res) {
 //route to post users, route handler
 app.post("/users", (req, res) => {
   Users.push(req.body);
-  res.status(201).res.json(req.body);
+  res.status(201).json(req.body);
 });
 
-app.patch("/users", async (req, res) => {
-  try {
-    const newUser = await Users.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.status(200).json(newUser);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
+app.patch("/users/:id", async (req, res) => {
+  const newUser = Users.find((user) => user.id === req.params.id);
+
+  if (!newUser) {
+    return res.status(404).json({
+      message: "User does not exist",
     });
   }
-});
-app.put("/users", async (req, res) => {
-  try {
-    const newUser = await Users.findByIdAndUpdate(req.params.id, req.body, {
-      new: true,
-    });
-    res.status(200).json(newUser);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
-    });
-  }
+  Object.assign(newUser, req.body);
+
+  res.status(200).json(newUser);
 });
 
-app.delete("/users/:id", async (req, res) => {
-  try {
-    const deletedUser = await Users.findByIdAndDelete(req.params.id);
+app.put("/users/:id", (req, res) => {
+  const index = Users.findIndex((user) => user.id === Number(req.params.id));
 
-    res.status(200).json(deletedUser);
-  } catch (error) {
-    res.status(500).json({
-      message: error.message,
+  if (index === -1) {
+    return res.status(404).json({
+      message: "User not found",
     });
   }
+
+  Users[index] = {
+    id: Number(req.params.id),
+    ...req.body,
+  };
+
+  res.status(200).json(Users[index]);
+});
+
+app.delete("/users/:id", (req, res) => {
+  const index = Users.findIndex((user) => user.id === Number(req.params.id));
+
+  if (index === -1) {
+    return res.status(404).json({
+      message: "User not found",
+    });
+  }
+
+  const deletedUser = Users.splice(index, 1);
+
+  res.status(200).json({
+    message: "User deleted successfully",
+    deletedUser: deletedUser[0],
+  });
 });
 
 app.listen(5000, () => console.log("server started"));
